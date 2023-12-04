@@ -52,12 +52,6 @@ const slice = createSlice({
 })
 export const tasksReducer = slice.reducer
 export const tasksActions = slice.actions
-const initialState: TasksStateType = {}
-
-// actions
-
-export const setTasksAC = (tasks: Array<TaskType>, todolistId: string) =>
-  ({ type: "SET-TASKS", tasks, todolistId }) as const
 
 // thunks
 export const fetchTasksTC =
@@ -66,16 +60,17 @@ export const fetchTasksTC =
     dispatch(appActions.setAppStatus({ status: "loading" }))
     todolistsAPI.getTasks(todolistId).then((res) => {
       const tasks = res.data.items
-      dispatch(setTasksAC(tasks, todolistId))
+      dispatch(tasksActions.setTasks({ tasks, todolistId }))
       dispatch(appActions.setAppStatus({ status: "succeeded" }))
     })
   }
-export const removeTaskTC = (taskId: string, todolistId: string) => (dispatch: Dispatch<ActionsType>) => {
-  todolistsAPI.deleteTask(todolistId, taskId).then((res) => {
-    const action = removeTaskAC(taskId, todolistId)
-    dispatch(action)
-  })
-}
+export const removeTaskTC =
+  (taskId: string, todolistId: string): AppThunk =>
+  (dispatch) => {
+    todolistsAPI.deleteTask(todolistId, taskId).then((res) => {
+      dispatch(tasksActions.removeTask({ taskId, todolistId }))
+    })
+  }
 export const addTaskTC =
   (title: string, todolistId: string): AppThunk =>
   (dispatch) => {
@@ -85,8 +80,7 @@ export const addTaskTC =
       .then((res) => {
         if (res.data.resultCode === 0) {
           const task = res.data.data.item
-          const action = addTaskAC(task)
-          dispatch(action)
+          dispatch(tasksActions.addTask({ task }))
           dispatch(appActions.setAppStatus({ status: "succeeded" }))
         } else {
           handleServerAppError(res.data, dispatch)
@@ -121,7 +115,7 @@ export const updateTaskTC =
       .updateTask(todolistId, taskId, apiModel)
       .then((res) => {
         if (res.data.resultCode === 0) {
-          const action = updateTaskAC(taskId, domainModel, todolistId)
+          const action = tasksActions.updateTask({ taskId, model: domainModel, todolistId })
           dispatch(action)
         } else {
           handleServerAppError(res.data, dispatch)
@@ -144,4 +138,3 @@ export type UpdateDomainTaskModelType = {
 export type TasksStateType = {
   [key: string]: Array<TaskType>
 }
-type ActionsType = ReturnType<typeof updateTaskAC> | ReturnType<typeof setTasksAC> | any
