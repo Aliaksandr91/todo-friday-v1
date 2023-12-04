@@ -4,6 +4,7 @@ import { appActions, RequestStatusType } from "app/app-reducer"
 import { handleServerNetworkError } from "utils/error-utils"
 import { AppThunk } from "app/store"
 import { createSlice, PayloadAction } from "@reduxjs/toolkit"
+import { pureFinalPropsSelectorFactory } from "react-redux/es/connect/selectorFactory"
 
 const slice = createSlice({
   name: "todolists",
@@ -31,13 +32,15 @@ const slice = createSlice({
       if (index !== -1) state[index].entityStatus = action.payload.entityStatus
     },
     setTodolists: (state, action: PayloadAction<{ todolists: TodolistType[] }>) => {
-      return action.payload.todolists.map((tl) => ({ ...tl, filter: "all", entityStatus: "idle" }))
+      //return action.payload.todolists.map((tl) => ({ ...tl, filter: "all", entityStatus: "idle" }))
+      action.payload.todolists.forEach((tl) => {
+        state.push({ ...tl, filter: "all", entityStatus: "idle" })
+      })
     },
   },
 })
 export const todolistsReducer = slice.reducer
 export const todolistsActions = slice.actions
-const initialState: Array<TodolistDomainType> = []
 
 // thunks
 export const fetchTodolistsTC = (): AppThunk => {

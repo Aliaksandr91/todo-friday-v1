@@ -3,10 +3,33 @@ import { Dispatch } from "redux"
 import { AppThunk } from "app/store"
 import { appActions } from "app/app-reducer"
 import { handleServerAppError, handleServerNetworkError } from "utils/error-utils"
+import { createSlice } from "@reduxjs/toolkit"
+import { todolistsActions } from "features/TodolistsList/todolists-reducer"
 
+const slice = createSlice({
+  name: "tasks",
+  initialState: {} as TasksStateType,
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(todolistsActions.addTodolist, (state, action) => {
+        state[action.payload.todolist.id] = []
+      })
+      .addCase(todolistsActions.removeTodolist, (state, action) => {
+        delete state[action.payload.id]
+      })
+      .addCase(todolistsActions.setTodolists, (state, action) => {
+        action.payload.todolists.forEach((tl) => {
+          state[tl.id] = []
+        })
+      })
+  },
+})
+export const tasksReducer = slice.reducer
+export const tasksActions = slice.actions
 const initialState: TasksStateType = {}
 
-export const tasksReducer = (state: TasksStateType = initialState, action: ActionsType): TasksStateType => {
+export const _tasksReducer = (state: TasksStateType = initialState, action: ActionsType): TasksStateType => {
   switch (action.type) {
     case "REMOVE-TASK":
       return { ...state, [action.todolistId]: state[action.todolistId].filter((t) => t.id != action.taskId) }
